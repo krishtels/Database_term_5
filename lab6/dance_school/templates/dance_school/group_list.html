@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Список групп{% endblock %}
+
+{% block content %}
+    <h1>Список танцевальных групп</h1>
+{#    <a class="btn btn-success" href="{% url 'group_add' %}">+ Добавить группу</a>#}
+    <table class="table-journal">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Группа</th>
+                <th>Количество вакантных мест</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for group in groups %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <a href="{% url 'group_detail' group.group_id %}">
+                            {{ group.group_name }}
+                        </a>
+                    </td>
+                    <td>
+                        {{ group.vacant_place }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

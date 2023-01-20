@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавить занятие{% endblock %}
+
+{% block content %}
+    <h1>Добавить занятие</h1>
+     {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% if error %}
+        <p>{{ error }}</p>
+    {% endif %}
+
+    <form action="" method="post" enctype="multipart/form-data">
+        <div class="create-form">
+            {% csrf_token %}
+            <div>
+                {% csrf_token %}
+                <p>
+                    <label for="{{ form.group.id_for_label }}">Группа:</label> <br>
+                    {{ form.group }}
+                    {{ form.group.errors }}
+                </p>
+
+                <p>
+                    <label for="{{ form.style.id_for_label }}">Стиль:</label> <br>
+                    {{ form.style }}
+                    {{ form.style.errors }}
+                </p>
+
+                 <p>
+                    <label for="{{ form.class_length.id_for_label }}">Длина занятия:</label> <br>
+                    {{ form.class_length }}
+                    {{ form.class_length.errors }}
+                </p>
+
+                <p>
+                    <label for="{{ form.choreo.id_for_label }}">Хореограф:</label> <br>
+                    {{ form.user }}
+                    {{ form.user.errors }}
+                </p>
+
+                <p>
+                    <label for="{{ form.choreo.id_for_label }}">Проведено занятие:</label> <br>
+                    {{ form.is_completed }}
+                    {{ form.is_completed.errors }}
+                </p>
+
+                <p>
+                    <label for="{{ form.choreo.id_for_label }}">Дата и время:</label> <br>
+                    {{ form.date_time }}
+                    {{ form.date_time.errors }}
+                </p>
+            </div>
+
+
+            <div id="contact">
+                <input type="submit" class="save_button" value="Сохранить">
+            </div>
+
+        </div>
+    </form>
+{% endblock %}

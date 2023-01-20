@@ -1,0 +1,14 @@
+{% block sidebar %}
+    <h3>Личный кабинет</h3>
+    <p><b>{{ user.first_name }} {{ user.last_name }}</b></p>
+    <ul>
+        <li><a href="{% url 'choreo_list' %}">Хореографы</a></li>
+        <li><a href="{% url 'group_list' %}">Танцевальные группы</a></li>
+        <li><a href="{% url 'add_schedule' %}">Добавить занятие</a></li>
+    </ul>
+    <hr>
+    <p><b>Настройки:</b></p>
+    <ul>
+        <li><a href="{% url 'logout' %}">Выйти</a></li>
+    </ul>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Список хореографов{% endblock %}
+
+{% block content %}
+    <h1>Хореографы</h1>
+    <a class="btn btn-success" href="{% url 'choreo_add' %}">+ Добавить хореографа</a>
+    <table class="table-journal">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>ФИО</th>
+                <th>Редактировать</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for choreo in choreo_list %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <a href="{% url 'choreo_detail' choreo.user_id%}">
+                            {{ choreo.user_name}} {{choreo.user_surname }}
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-dark" href="{% url 'choreo_update' choreo.user_id %}">Редактировать</a>
+                    </td>
+                </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+{% endblock %}

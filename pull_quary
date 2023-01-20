@@ -1,0 +1,229 @@
+CREATE DATABASE dance_school;
+
+CREATE TABLE roles (
+    role_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    role_name VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE permissions (
+    permission_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    permission_name VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE role_permissions (
+    role_id INT NOT NULL REFERENCES roles(role_id),
+    permission_id INT NOT NULL REFERENCES permissions(permission_id)
+);
+
+CREATE TABLE users (
+    user_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	role_id INT REFERENCES roles(role_id),
+    login VARCHAR(50) NOT NULL UNIQUE,
+	user_password VARCHAR(128) NOT NULL,
+	email VARCHAR(128) NOT NULL UNIQUE,
+	user_name VARCHAR(50) NOT NULL,
+	user_surname VARCHAR(50) NOT NULL,
+	date_of_birth DATE
+	CONSTRAINT proper_email CHECK (email ~ '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$')
+);
+
+CREATE TABLE choreographers (
+    choreo_id INT PRIMARY KEY REFERENCES users(user_id),
+    phone_number VARCHAR(15),
+	salary REAL NOT NULL,
+	CONSTRAINT salary_check CHECK (salary > 0),
+	CONSTRAINT proper_phone_number CHECK (phone_number ~* '^[+][-\s0-9]+$')
+);
+
+CREATE TABLE styles (
+    style_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    style_name VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE choreo_styles (
+    choreo_id INT NOT NULL REFERENCES choreographers(choreo_id),
+    style_id INT NOT NULL REFERENCES styles(style_id)
+);
+
+CREATE TABLE dance_groups (
+    group_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    group_name VARCHAR(50) NOT NULL UNIQUE,
+	vacant_place INT NOT NULL,
+	CONSTRAINT vacant_place_check CHECK (vacant_place >= 0)
+);
+
+CREATE TABLE schedule (
+    lesson_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    style_id INT NOT NULL REFERENCES styles(style_id),
+	group_id INT NOT NULL REFERENCES dance_groups(group_id),
+	choreo_id INT NOT NULL REFERENCES choreographers(choreo_id),
+	class_length REAL NOT NULL,
+	is_completed BOOLEAN NOT NULL,
+	date_time TIMESTAMP NOT NULL,
+	CONSTRAINT class_length_check CHECK (class_length > 0)
+);
+
+CREATE TABLE logs (
+	log_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	user_id INT NOT NULL REFERENCES users(user_id),
+	log_date TIMESTAMP NOT NULL,
+	log_info VARCHAR(256) NOT NULL
+);
+
+CREATE TABLE memberships (
+	member_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	price REAL NOT NULL,
+	start_date DATE NOT NULL,
+	end_date DATE NOT NULL,
+	amount_of_lessons INT,
+	CONSTRAINT price_check CHECK (price > 0),
+	CONSTRAINT date_check CHECK (end_date - start_date > 0 )
+);
+
+CREATE TABLE dancers (
+	dancer_id INT PRIMARY KEY REFERENCES users(user_id),
+    group_id INT REFERENCES dance_groups(group_id),
+	member_id INT REFERENCES memberships(member_id),
+	amount_of_lessons_left INT NOT NULL,
+	CONSTRAINT lessons_check CHECK (amount_of_lessons_left >= 0)
+);
+
+CREATE TABLE dancer_visits (
+    dancer_id INT NOT NULL REFERENCES dancers(dancer_id),
+    lesson_id INT NOT NULL REFERENCES schedule(lesson_id)
+);
+
+CREATE INDEX full_name_indx ON users(user_surname, user_name);
+CREATE INDEX style_name_indx ON styles(style_name);
+
+INSERT INTO styles(style_name)
+VALUES ('контемпорари'),
+	   ('народный'),
+	   ('классический'),
+       ('хип-хоп'),
+       ('бальный'),
+       ('эстрадный'),
+	   ('модерн')
+
+INSERT INTO roles(role_name)
+VALUES ('choreographer'),
+	   ('dancer'),
+	   ('moderator'),
+	   ('admin'),
+	   ('editor')
+
+INSERT INTO dance_groups(group_name, vacant_place)
+VALUES ('Тодес', 10),
+	   ('Пятница', 12),
+	   ('Отражения', 5)
+
+INSERT INTO memberships(price, start_date, end_date, amount_of_lessons)
+VALUES (50, '2022-10-01', '2022-11-01', 8),
+	   (70, '2022-10-01', '2022-11-11', 10),
+	   (100, '2022-10-01', '2022-11-01', 16)
+
+INSERT INTO users(role_id, login, user_password, email, user_name, user_surname, date_of_birth)
+VALUES ((SELECT role_id FROM roles WHERE role_name = 'dancer'), 
+		'krishtels', '1234', 'karina.krishtafovich@mail.ru', 'Карина', 'Криштафович', '2003-03-25')
+
+INSERT INTO users(role_id, login, user_password, email, user_name, user_surname, date_of_birth)
+VALUES ((SELECT role_id FROM roles WHERE role_name = 'dancer'), 
+		'oladushek', '1234', 'user@mail.ru', 'Владислав', 'Плиска', '1998-10-20'),
+		((SELECT role_id FROM roles WHERE role_name = 'choreographer'), 
+		 'choreo1', '1234', 'choreo1@mail.ru', 'Алла', 'Духова', '1980-01-01')
+
+INSERT INTO users(role_id, login, user_password, email, user_name, user_surname, date_of_birth)
+VALUES ((SELECT role_id FROM roles WHERE role_name = 'choreographer'), 
+		'choreo2', '1234', 'choreo2@mail.ru', 'Иван', 'Иванов', '1990-01-01')
+
+INSERT INTO choreographers (choreo_id, phone_number, salary)
+VALUES ((SELECT user_id FROM users WHERE user_surname = 'Духова'), '+375298888888', 700),
+ 		((SELECT user_id FROM users WHERE user_surname = 'Иванов'), '+375291111111', 900)
+
+INSERT INTO choreo_styles
+VALUES ((SELECT user_id FROM users WHERE user_surname = 'Духова'), 
+		(SELECT style_id FROM styles WHERE style_name = 'эстрадный')),
+		((SELECT user_id FROM users WHERE user_surname = 'Духова'), 
+		 (SELECT style_id FROM styles WHERE style_name = 'модерн')),
+		 ((SELECT user_id FROM users WHERE user_surname = 'Иванов'), 
+		  (SELECT style_id FROM styles WHERE style_name = 'контемпорари')),
+		  ((SELECT user_id FROM users WHERE user_surname = 'Иванов'), 
+		   (SELECT style_id FROM styles WHERE style_name = 'народный'))
+
+INSERT INTO dancers
+VALUES ((SELECT user_id FROM users WHERE user_surname = 'Криштафович'), 
+		(SELECT group_id FROM dance_groups WHERE group_name = 'Отражения'), 
+		(SELECT member_id FROM memberships WHERE price = 50), 8),
+		((SELECT user_id FROM users WHERE user_surname = 'Плиска'), 
+		 (SELECT group_id FROM dance_groups WHERE group_name = 'Пятница'), 
+		 (SELECT member_id FROM memberships WHERE price = 70), 8)
+
+INSERT INTO schedule (style_id, group_id, choreo_id, class_length, is_completed, date_time)
+VALUES ((SELECT style_id FROM styles WHERE style_name = 'эстрадный'), 
+		(SELECT group_id FROM dance_groups WHERE group_name = 'Тодес'), 
+		(SELECT user_id FROM users WHERE user_surname = 'Духова'), 1.5, FALSE, '2022-10-08 14:00'),
+		((SELECT style_id FROM styles WHERE style_name = 'модерн'), 
+		 (SELECT group_id FROM dance_groups WHERE group_name = 'Тодес'), 
+		 (SELECT user_id FROM users WHERE user_surname = 'Духова'), 1.5, FALSE, '2022-10-08 16:00'),
+		 ((SELECT style_id FROM styles WHERE style_name = 'контемпорари'), 
+		  (SELECT group_id FROM dance_groups WHERE group_name = 'Отражения'), 
+		  (SELECT user_id FROM users WHERE user_surname = 'Иванов'), 4, TRUE, '2022-10-05 18:00'),
+		  ((SELECT style_id FROM styles WHERE style_name = 'народный'), 
+		   (SELECT group_id FROM dance_groups WHERE group_name = 'Пятница'), 
+		   (SELECT user_id FROM users WHERE user_surname = 'Иванов'), 2, TRUE, '2022-10-04 10:00')
+
+INSERT INTO dancer_visits
+VALUES ((SELECT user_id FROM users WHERE user_surname = 'Криштафович'), 3),
+	   ((SELECT user_id FROM users WHERE user_surname = 'Плиска'), 4)
+
+SELECT * FROM users
+WHERE role_id = (SELECT role_id FROM roles WHERE role_name = 'dancer');
+
+SELECT * FROM choreo_styles;
+SELECT DISTINCT choreo_id FROM choreo_styles;
+
+SELECT * FROM choreographers
+WHERE salary BETWEEN 700 AND 800;
+
+SELECT style_name FROM styles
+ORDER BY style_name
+LIMIT 3;
+
+SELECT style_name FROM styles
+ORDER BY style_name
+LIMIT 4 OFFSET 2;
+
+SELECT role_id, COUNT(*) AS role_count 
+FROM users
+GROUP BY role_id;
+
+SELECT role_id, COUNT(*) AS role_count
+FROM users
+GROUP BY role_id
+HAVING COUNT(*) > 2;
+
+UPDATE choreographers
+SET salary = salary + 30;
+
+UPDATE dance_groups
+SET group_name = 'Пятница Групп'
+WHERE group_name = 'Пятница';
+
+INSERT INTO users(role_id, login, user_password, email, user_name, user_surname, date_of_birth)
+VALUES ((SELECT role_id FROM roles WHERE role_name = 'dancer'), 
+		'pechenko_vkysnoe', '1234', 'misha@mail.ru', 'Михаил', 'Григорчук', '2002-05-21')
+
+INSERT INTO dancers
+VALUES ((SELECT user_id FROM users WHERE user_surname = 'Григорчук'), 
+		(SELECT group_id FROM dance_groups WHERE group_name = 'Тодес'), 
+		(SELECT member_id FROM memberships WHERE price = 100), 10)
+
+DELETE FROM dancers
+WHERE dancer_id IN (SELECT user_id FROM users WHERE user_surname = 'Григорчук'); 
+
+select email from users
+where email ilike '%@M%'
+
+insert into users(role_id, login, user_password, email, user_name, user_surname, date_of_birth)
+VALUES ((SELECT role_id FROM roles WHERE role_name = 'dancer'), 
+		'fff', '1234', 'user@mail.ru', 'h', 'h', '1998-10-20')

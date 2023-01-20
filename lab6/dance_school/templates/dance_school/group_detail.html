@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Состав группы {{ group_detail.group_name }} {% endblock %}
+
+{% block content %}
+    <h1>Состав группы - {{ group_detail.group_name  }}</h1>
+
+    <h2>Количество свободных мест {{ group_detail.vacant_place }}</h2>
+    <table class="table-journal">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Стиль</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for style in styles %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ style.style_name }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Список танцоров группы{{ group.group_name }}</h2>
+    <a class="btn btn-success" href="{% url 'dancer_add' %}">+ Добавить танцора</a>
+    <table class="table-journal">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>ФИО</th>
+                <th>Количество оставшихся занятий</th>[
+                <th>Редактировать</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dancer in dancers %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <a href="{% url 'dancer_detail' dancer.dancer_id%}">
+                            {{ dancer.user_name}} {{dancer.user_surname }}
+                        </a>
+                    </td>
+                    <td>{{ dancer.amount_of_lessons_left }}</td>
+                    <td>
+                        <a class="btn btn-dark" href="{% url 'dancer_update' dancer.dancer_id %}">Редактировать</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    <h2>Список занятий группы{{ group.group_name }}</h2>
+    <table class="table-journal">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>ФИО хореографа</th>
+                <th>Название стиля</th>[
+                <th>Дата и время</th>
+                <th>Продолжительность</th>
+                <th>Завершено</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lesson in schedule %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        {{ lesson.user_name}} {{lesson.user_surname }}
+                    </td>
+                    <td>{{ lesson.style_name }}</td>
+                    <td>{{ lesson.date_time }}</td>
+                    <td>{{ lesson.class_length }} час(а)</td>
+                    <td>{{ lesson.is_completed }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

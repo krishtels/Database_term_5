@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Информация о танцоре {{ dancer_detail.dancer.user_surname }}{% endblock %}
+
+{% block content %}
+    <h1>Информация о студенте </h1>
+    <div class="people-info ">
+
+        <div class="people-info-block">
+            <h3>{{ dancer_detail.dancer.user_surname }} {{ dancer_detail.dancer.user_name }}</h3>
+            <p><i><u>Дата рождения:</u></i> {{ dancer_detail.dancer.date_of_birth|date:"d.m.Y" }}</p>
+            <p><i><u>Email:</u></i> {{ dancer_detail.dancer.email }} </p>
+            <p><i><u>Группа:</u></i> {{ dancer_detail.group.group_name }}</p>
+
+            <h4>Информация об абонименте</h4>
+            <p><i><u>Количество оставшихся занятий:</u></i> {{ dancer_detail.amount_of_lessons_left }}</p>
+            <p><i><u>Дата покупки:</u></i> {{ dancer_detail.member.start_date|date:"d.m.Y" }}</p>
+            <p><i><u>Дата окончания:</u></i> {{ dancer_detail.member.end_date|date:"d.m.Y" }}</p>
+            <p><i><u>Цена:</u></i> {{ dancer_detail.member.price }}</p>
+
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Новый танцор{% endblock %}
+
+{% block content %}
+    <h1>Новый танцор</h1>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form action="" method="post" enctype="multipart/form-data">
+        <div class="create-form">
+            {% csrf_token %}
+            <div id="left-side">
+                <p>
+                    {{ form.login }}
+                    {{ form.login.errors }}
+                </p>
+
+                <p>
+                    {{ form.user_password }}
+                    {{ form.user_password.errors }}
+                </p>
+
+                <p>
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </p>
+
+                <p>
+                    {{ form.user_name }}
+                    {{ form.user_name.errors }}
+                </p>
+                <p>
+                    {{ form.user_surname }}
+                    {{ form.user_surname.errors }}
+                </p>
+
+                <p>
+                    <label for="{{ form.date_of_birth.id_for_label }}">Дата рождения:</label> <br>
+                    {{ form.date_of_birth }}
+                    {{ form.date_of_birth.errors }}
+                </p>
+            </div>
+
+            <div id="right-side">
+                <p><label>Группа:</label> <br>
+                    {{ dancer_form.group }}
+                </p>
+                <p> <label>Абонимент</label>
+                    {{ dancer_form.member }}
+                </p>
+            </div>
+
+            <div id="contact">
+                <input type="submit" class="save_button" value="Сохранить">
+            </div>
+
+        </div>
+    </form>
+{% endblock %}

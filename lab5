@@ -1,0 +1,115 @@
+CREATE OR REPLACE FUNCTION log_users() RETURNS TRIGGER AS $user_log$
+DECLARE
+    retstr varchar(256);
+BEGIN
+    IF    TG_OP = 'INSERT' THEN
+        retstr := 'Add new user with login: ' || NEW.login || ' surname: '|| NEW.user_surname;
+        INSERT INTO logs(log_date, log_info) VALUES (NOW(), retstr);
+        RETURN NEW;
+    ELSIF TG_OP = 'UPDATE' THEN
+        retstr := 'Update user with login: ' || NEW.login || ' surname: '|| NEW.user_surname;
+        INSERT INTO logs(log_date, log_info) VALUES (NOW(), retstr);
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+		retstr := 'Remove user with login: ' || OLD.login || ' surname: '|| OLD.user_surname;
+        INSERT INTO logs(log_date, log_info) VALUES (NOW(), retstr);
+        RETURN OLD;
+    END IF;
+END;
+$user_log$ LANGUAGE plpgsql;
+
+CREATE TRIGGER user_log_trigger
+AFTER INSERT OR UPDATE OR DELETE ON users FOR EACH ROW EXECUTE FUNCTION log_users ();
+
+DELETE FROM users WHERE login =  'user3';
+
+INSERT INTO users(role_id, login, user_password, email, user_name, user_surname, date_of_birth)
+VALUES ((SELECT role_id FROM roles WHERE role_name = 'dancer'), 
+		'user3', '1234', 'user3@mail.ru', 'Иван', 'Иванов', '1990-01-01');
+
+INSERT INTO dancers(dancer_id, group_id, member_id, amount_of_lessons_left)
+VALUES ((SELECT user_id FROM users WHERE login= 'user3'),
+		(SELECT group_id FROM dance_groups WHERE group_name = 'Тодес'),
+		 (SELECT member_id FROM memberships WHERE price = 100), 16);
+		
+CREATE OR REPLACE FUNCTION update_lessons() RETURNS TRIGGER AS $lesson_trig$
+BEGIN
+    IF    TG_OP = 'INSERT' THEN
+		UPDATE dancers
+		SET amount_of_lessons_left = amount_of_lessons_left - 1
+		WHERE dancer_id = NEW.dancer_id;  
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+		UPDATE dancers
+		SET amount_of_lessons_left = amount_of_lessons_left + 1
+		WHERE dancer_id = OLD.dancer_id;
+        RETURN OLD;
+    END IF;
+END;
+$lesson_trig$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_lesson_trigger
+AFTER INSERT OR DELETE ON dancer_visits FOR EACH ROW EXECUTE FUNCTION update_lessons ();
+
+UPDATE schedule
+		SET is_completed = true
+		WHERE lesson_id = 1;
+
+INSERT INTO dancer_visits
+VALUES ((SELECT user_id FROM users WHERE login = 'user3'),
+		3)
+		
+CREATE PROCEDURE add_dancer_visit(user_login VARCHAR(50), lesson INT)
+LANGUAGE plpgsql 
+AS $$
+BEGIN
+	IF (SELECT is_completed FROM schedule WHERE lesson_id = lesson) = true THEN
+		IF EXISTS (SELECT * FROM dancers WHERE dancer_id = (SELECT user_id FROM users WHERE login = user_login)) THEN
+			INSERT INTO dancer_visits VALUES ((SELECT user_id FROM users WHERE login = user_login), lesson);
+		ELSE RAISE EXCEPTION 'User isnt dancer';
+		END IF;
+	ELSE RAISE EXCEPTION 'Lesson wasnt completed' ; 
+	END IF;
+END;
+$$;
+
+CALL add_dancer_visit('krishtels', 3);
+CALL add_dancer_visit('choreo1', 2);
+
+CREATE PROCEDURE add_new_dancer(user_login VARCHAR(50), user_password VARCHAR(128), email VARCHAR(128), user_name VARCHAR(50), user_surname VARCHAR(50), date_of_birth DATE, dance_group_name VARCHAR(50), membership_id INT)
+LANGUAGE plpgsql 
+AS $$
+BEGIN
+	IF NOT EXISTS (SELECT * FROM users WHERE user_login = login) THEN
+		INSERT INTO users(role_id, login, user_password, email, user_name, user_surname, date_of_birth) 
+			VALUES ((SELECT role_id FROM roles WHERE roles.role_name = 'dancer'), 
+					user_login, user_password, email, user_name, user_surname, date_of_birth);
+		INSERT INTO dancers(dancer_id, group_id, member_id, amount_of_lessons_left) 
+		VALUES ((SELECT user_id FROM users WHERE users.login = user_login), 
+				(SELECT group_id FROM dance_groups WHERE dance_groups.group_name = dance_group_name),
+				membership_id, (SELECT amount_of_lessons FROM memberships WHERE memberships.member_id = membership_id));		
+	ELSE RAISE EXCEPTION 'User already exist' ; 
+	END IF;
+END;
+$$;
+
+CALL add_new_dancer('dancer1', '1234', 'dancer1@mail.ru', 'Дмитрий', 'Дмитриев', '1990-01-01', 'Пятница Групп', 3);
+
+CREATE OR REPLACE FUNCTION check_name_users() RETURNS TRIGGER AS $user_check$
+BEGIN
+	UPDATE users 
+	SET user_name = UPPER(SUBSTRING(user_name FROM 1 FOR 1)) || LOWER(SUBSTRING(user_name FROM 2 FOR LENGTH(user_name))),
+	user_surname = UPPER(SUBSTRING(user_surname FROM 1 FOR 1)) || LOWER(SUBSTRING(user_surname FROM 2 FOR LENGTH(user_surname)))
+	WHERE user_id = NEW.user_id;
+	RETURN NEW;
+END;
+$user_check$ LANGUAGE plpgsql;
+
+CREATE TRIGGER user_check_name_trigger
+AFTER INSERT ON users FOR EACH ROW EXECUTE FUNCTION check_name_users ();
+
+INSERT INTO users(role_id, login, user_password, email, user_name, user_surname, date_of_birth)
+VALUES ((SELECT role_id FROM roles WHERE role_name = 'dancer'), 
+		'user4', '1234', 'user4@mail.ru', 'иван', 'сидоров', '1990-01-01');
+		
+select * from users

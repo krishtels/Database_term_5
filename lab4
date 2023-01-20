@@ -1,0 +1,76 @@
+SELECT users.user_name, users.user_surname, roles.role_name FROM users 
+LEFT OUTER JOIN roles ON roles.role_id = users.role_id
+
+INSERT INTO dancers
+VALUES ((SELECT user_id FROM users WHERE user_surname = 'Григорчук'), 
+		(SELECT group_id FROM dance_groups WHERE group_name = 'Тодес'), 
+		(SELECT member_id FROM memberships WHERE price = 50), 8)
+		
+SELECT users.user_name, users.user_surname, dancers.amount_of_lessons_left, dance_groups.group_name FROM dancers 
+INNER JOIN users ON dancers.dancer_id = users.user_id 
+INNER JOIN dance_groups ON dancers.group_id = dance_groups.group_id 
+
+SELECT users.user_name, users.user_surname, roles.role_name FROM users 
+RIGHT OUTER JOIN roles ON roles.role_id = users.role_id
+
+SELECT users.user_name, users.user_surname, styles.style_name FROM choreo_styles 
+INNER JOIN styles ON styles.style_id = choreo_styles.style_id
+INNER JOIN choreographers ON choreographers.choreo_id = choreo_styles.choreo_id
+INNER JOIN users ON choreographers.choreo_id = users.user_id 
+
+(SELECT users.user_name, users.user_surname, roles.role_name FROM dancers 
+INNER JOIN users ON dancers.dancer_id = users.user_id
+INNER JOIN roles ON roles.role_id = users.role_id)
+ 
+UNION
+ 
+(SELECT users.user_name, users.user_surname, roles.role_name FROM choreographers 
+INNER JOIN users ON choreographers.choreo_id = users.user_id
+INNER JOIN roles ON roles.role_id = users.role_id)
+
+
+SELECT roles.role_name, COUNT(users.user_id) AS role_count FROM users
+RIGHT OUTER JOIN roles ON roles.role_id = users.role_id
+GROUP BY roles.role_id;
+
+SELECT roles.role_name, COUNT(users.user_id) AS role_count FROM users
+RIGHT OUTER JOIN roles ON roles.role_id = users.role_id
+GROUP BY roles.role_id
+HAVING COUNT(*) > 2;
+
+SELECT dance_groups.group_name, COUNT(dancers.dancer_id) AS amount_of_members FROM dancers
+INNER JOIN dance_groups ON dancers.group_id = dance_groups.group_id
+GROUP BY dance_groups.group_name
+ 
+SELECT users.user_surname, styles.style_name FROM dancer_visits
+INNER JOIN dancers ON dancers.dancer_id = dancer_visits.dancer_id
+INNER JOIN users ON dancers.dancer_id = users.user_id
+INNER JOIN schedule ON schedule.lesson_id = dancer_visits.lesson_id
+INNER JOIN styles ON schedule.style_id = styles.style_id
+
+SELECT users.user_surname, COUNT(dancer_visits.lesson_id) AS amount_of_lessons_visited FROM dancer_visits
+INNER JOIN dancers ON dancers.dancer_id = dancer_visits.dancer_id
+INNER JOIN users ON dancers.dancer_id = users.user_id
+GROUP BY users.user_surname
+
+SELECT choreo_id FROM choreo_styles AS choreo_estr
+WHERE style_id=(SELECT style_id FROM styles WHERE style_name = 'эстрадный')
+AND EXISTS (
+	SELECT choreo_id FROM choreo_styles
+    WHERE style_id=(SELECT style_id FROM styles WHERE style_name = 'модерн')
+    AND choreo_id=choreo_estr.choreo_id)	  
+
+SELECT dancer_id, amount_of_lessons_left,
+       CASE
+           WHEN amount_of_lessons_left  <= 0
+                THEN 'Уроков нет'
+           WHEN amount_of_lessons_left > 0
+                AND amount_of_lessons_left < 3 THEN 'Мало уроков'
+           WHEN amount_of_lessons_left>= 3 THEN 'Уроков достаточно'
+       END lessons_count
+FROM dancers
+
+SELECT users.user_surname, dance_groups.group_name, memberships.price, memberships.start_date, memberships.end_date, memberships.amount_of_lessons FROM dancers
+INNER JOIN users ON dancers.dancer_id = users.user_id
+INNER JOIN dance_groups ON dancers.group_id = dance_groups.group_id
+INNER JOIN memberships ON memberships.member_id = dancers.member_id

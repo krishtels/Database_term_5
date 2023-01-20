@@ -1,0 +1,27 @@
+{% load static %}
+{% load sidebar %}
+{% load filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static "css/style.css" %}">
+    <title>{% block title %}Школа танцев{% endblock %}</title>
+</head>
+<body>
+    <div id="header"></div>
+    {% block sidebar %}
+        <div class="sidebar">
+             {% dancer_sidebar request.user %}
+        </div>
+    {% endblock %}
+
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <div id="footer"></div>
+</body>
+</html>
