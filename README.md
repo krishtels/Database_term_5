@@ -1,4 +1,4 @@
-**Dance School - PostgreSQL Database project
+**Dance School - PostgreSQL Database project**
 Designing and developing Dance School database. Implement this database in website Django project. Includes:
 - Database schema and its normalization
 - Creating tables, connections, indexes of db and filling it with data using SQL scripts
